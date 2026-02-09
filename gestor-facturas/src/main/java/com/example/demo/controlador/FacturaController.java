@@ -34,31 +34,24 @@ public class FacturaController {
     }
 
     // --- TEMA 12: COOKIES (MODO OSCURO) ---
-    // Esto hace que la variable 'tema' esté disponible en TODOS los HTML
     @ModelAttribute("tema")
     public String getTema(@CookieValue(name = "tema", defaultValue = "light") String tema) {
         return tema;
     }
 
-    // Endpoint para cambiar el tema y guardar la cookie
     @GetMapping("/cambiar-tema")
     public String cambiarTema(HttpServletResponse response,
                               @CookieValue(name = "tema", defaultValue = "light") String temaActual,
                               @RequestHeader(value = "Referer", defaultValue = "/") String referer) {
-
         String nuevoTema = "light".equals(temaActual) ? "dark" : "light";
-
-        // Creamos la cookie
         Cookie cookie = new Cookie("tema", nuevoTema);
-        cookie.setPath("/"); // Visible en toda la app
-        cookie.setMaxAge(7 * 24 * 60 * 60); // Dura 1 semana
-
+        cookie.setPath("/");
+        cookie.setMaxAge(7 * 24 * 60 * 60);
         response.addCookie(cookie);
-
-        return "redirect:" + referer; // Vuelve a la página donde estabas
+        return "redirect:" + referer;
     }
-    // --------------------------------------
 
+    // --- AQUÍ ESTÁ EL CAMBIO CLAVE PARA LOS GRÁFICOS/TARJETAS ---
     @GetMapping("/dashboard")
     public String dashboard(Model model, Authentication auth, @RequestParam(required = false) String query) {
         String username = auth.getName();
@@ -72,10 +65,18 @@ public class FacturaController {
                     .collect(Collectors.toList());
         }
 
+        // --- NUEVAS LÍNEAS PARA LOS KPIs (TARJETAS) ---
+        // Esto envía los números calculados a la vista lista.html
+        model.addAttribute("kpiTotal", service.calcularTotalFacturado());
+        model.addAttribute("kpiPendientes", service.contarFacturasPendientes());
+        model.addAttribute("kpiNumFacturas", service.contarTotalFacturas());
+        // ----------------------------------------------
+
         model.addAttribute("facturas", facturas);
         model.addAttribute("query", query);
         return "lista";
     }
+    // ------------------------------------------------------------
 
     @GetMapping("/nueva")
     public String nueva(Model model) {
@@ -98,7 +99,7 @@ public class FacturaController {
             if (antigua != null) factura.setNombreLogo(antigua.getNombreLogo());
         }
         service.guardar(factura);
-        return "redirect:/";
+        return "redirect:/dashboard"; // Te recomiendo redirigir al dashboard en lugar de a "/"
     }
 
     @GetMapping("/editar/{id}")
@@ -120,18 +121,36 @@ public class FacturaController {
     }
 
     @GetMapping("/borrar/{id}")
-    public String borrar(@PathVariable Long id) { service.borrar(id); return "redirect:/"; }
+    public String borrar(@PathVariable Long id) { service.borrar(id); return "redirect:/dashboard"; } // Redirigir a dashboard
 
     @GetMapping("/enviar/{id}")
     public String enviar(@PathVariable Long id) {
         Factura f = service.findById(id);
         if (f != null) service.enviarFacturaPorEmail(f);
-        return "redirect:/";
+        return "redirect:/dashboard";
     }
 
     @GetMapping("/uploads/{filename:.+}")
     public ResponseEntity<Resource> serveFile(@PathVariable String filename) throws MalformedURLException {
         Resource file = new UrlResource(UPLOAD_DIR.resolve(filename).toUri());
         return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + file.getFilename() + "\"").body(file);
+    }
+
+    @GetMapping("/descargar-pdf/{id}")
+    public void descargarPdf(@PathVariable Long id, HttpServletResponse response) throws IOException {
+        Factura f = service.findById(id);
+        if (f != null) {
+            // 1. Configurar navegador para descargar
+            response.setContentType("application/pdf");
+            String headerKey = "Content-Disposition";
+            String headerValue = "attachment; filename=Factura_" + f.getId() + ".pdf";
+            response.setHeader(headerKey, headerValue);
+
+            // 2. Llamar al servicio para que escriba el PDF
+            service.generarPdf(f, response);
+        } else {
+            // Si no existe, redirigir al error
+            response.sendRedirect("/dashboard");
+        }
     }
 }

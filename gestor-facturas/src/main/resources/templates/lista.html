@@ -21,7 +21,7 @@
         body.dark-mode .table-light,
         body.dark-mode .table-light th,
         body.dark-mode .table thead th {
-            background-color: #000000 !important; /* Negro puro o #212529 para gris muy oscuro */
+            background-color: #000000 !important;
             color: #ffffff !important;
             border-color: #444 !important;
         }
@@ -33,6 +33,17 @@
         .table-row-hover:hover { background-color: rgba(0,0,0,0.05); transition: 0.2s; }
         .action-btn { transition: transform 0.2s; }
         .action-btn:hover { transform: translateY(-2px); }
+
+        body.dark-mode input::placeholder {
+            color: #cccccc !important;
+            opacity: 1; /* Necesario para Firefox */
+        }
+
+        /* Opcional: Un fondo muy sutil para que se vea dónde está la caja */
+        body.dark-mode input.form-control {
+            background-color: rgba(255, 255, 255, 0.05) !important;
+            border: 1px solid #444 !important;
+        }
     </style>
 </head>
 
@@ -75,7 +86,7 @@
 
     <div class="card mb-4 border-0 shadow-sm">
         <div class="card-body p-2">
-            <form th:action="@{/}" method="get" class="row g-2 align-items-center">
+            <form th:action="@{/dashboard}" method="get" class="row g-2 align-items-center">
                 <div class="col-auto ms-2 text-muted">
                     <i class="bi bi-search"></i>
                 </div>
@@ -87,7 +98,7 @@
                 </div>
                 <div class="col-auto">
                     <button type="submit" class="btn btn-dark rounded-pill px-4">Buscar</button>
-                    <a th:if="${query != null && query != ''}" th:href="@{/}" class="btn btn-outline-secondary rounded-pill ms-1">
+                    <a th:if="${query != null && query != ''}" th:href="@{/dashboard}" class="btn btn-outline-secondary rounded-pill ms-1">
                         <i class="bi bi-x-lg"></i>
                     </a>
                 </div>
@@ -95,21 +106,78 @@
         </div>
     </div>
 
-    <div class="row g-3 mb-4">
+    <div class="row g-4 mb-4">
         <div class="col-md-4">
-            <div class="card p-3 border-start border-4 border-primary">
-                <div class="text-muted small text-uppercase fw-bold">Total Facturado</div>
-                <div class="fs-3 fw-bold" th:classappend="${tema == 'dark' ? 'text-white' : 'text-dark'}" th:text="${#aggregates.sum(facturas.![importeTotal]) ?: 0} + ' €'">0 €</div>
+            <div class="card shadow-sm border-0 border-start border-4 border-primary h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <p class="text-muted mb-1 text-uppercase fw-bold small">Total Facturado</p>
+                            <h3 class="fw-bold text-primary" th:text="${kpiTotal} + ' €'">0.0 €</h3>
+                        </div>
+                        <div class="fs-1 text-primary opacity-25">
+                            <i class="bi bi-currency-euro"></i>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
+
         <div class="col-md-4">
-            <div class="card p-3 border-start border-4 border-success">
-                <div class="text-muted small text-uppercase fw-bold">Facturas Visibles</div>
-                <div class="fs-3 fw-bold" th:classappend="${tema == 'dark' ? 'text-white' : 'text-dark'}"><span th:text="${facturas.size()}">0</span></div>
+            <div class="card shadow-sm border-0 border-start border-4 border-danger h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <p class="text-muted mb-1 text-uppercase fw-bold small">Facturas Pendientes</p>
+                            <h3 class="fw-bold text-danger" th:text="${kpiPendientes}">0</h3>
+                        </div>
+                        <div class="fs-1 text-danger opacity-25">
+                            <i class="bi bi-clock-history"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 border-start border-4 border-success h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <p class="text-muted mb-1 text-uppercase fw-bold small">Facturas Emitidas</p>
+                            <h3 class="fw-bold text-success" th:text="${kpiNumFacturas}">0</h3>
+                        </div>
+                        <div class="fs-1 text-success opacity-25">
+                            <i class="bi bi-file-earmark-text"></i>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <h5 class="text-muted small text-uppercase fw-bold mb-3">Estado de Cobros</h5>
+                    <div style="height: 200px; display: flex; justify-content: center;">
+                        <canvas id="myChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0 h-100 bg-primary bg-opacity-10 d-flex align-items-center justify-content-center">
+                <div class="text-center p-4">
+                    <i class="bi bi-rocket-takeoff-fill text-primary display-4 mb-3"></i>
+                    <h4 class="fw-bold text-primary">¡Todo al día!</h4>
+                    <p class="text-muted">Utiliza el botón "Descargar PDF" para guardar tus facturas o envíalas por correo.</p>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="card overflow-hidden">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
@@ -187,6 +255,46 @@
         </div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script th:inline="javascript">
+    /* RECUPERAMOS LOS DATOS DE JAVA */
+    // Usamos corchetes dobles para que Thymeleaf inyecte los números
+    const total = [[${kpiNumFacturas}]];
+    const pendientes = [[${kpiPendientes}]];
+    const pagadas = total - pendientes;
+
+    /* DIBUJAMOS EL GRÁFICO */
+    const ctx = document.getElementById('myChart');
+
+    if (ctx) {
+        new Chart(ctx, {
+            type: 'doughnut', // Tipo de gráfico: Donut
+            data: {
+                labels: ['Pagadas', 'Pendientes'],
+                datasets: [{
+                    data: [pagadas, pendientes],
+                    backgroundColor: [
+                        '#198754', // Verde (Success de Bootstrap)
+                        '#dc3545'  // Rojo (Danger de Bootstrap)
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false, // Importante para que no se deforme
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    }
+                }
+            }
+        });
+    }
+</script>
 
 </body>
 </html>

@@ -40,8 +40,11 @@
 
 <div class="fixed-top p-3 d-flex justify-content-center gap-3" style="pointer-events: none;">
     <div style="pointer-events: auto;">
-        <a th:href="@{/}" class="btn btn-light shadow-sm rounded-pill px-4 fw-bold"><i class="bi bi-arrow-left"></i> Volver</a>
+        <a th:href="@{/dashboard}" class="btn btn-light shadow-sm rounded-pill px-4 fw-bold"><i class="bi bi-arrow-left"></i> Volver</a>
         <a th:href="@{/enviar/{id}(id=${factura.id})}" class="btn btn-warning shadow-sm rounded-pill px-4 fw-bold"><i class="bi bi-send-fill"></i> Enviar</a>
+        <a th:href="@{/descargar-pdf/{id}(id=${factura.id})}" class="btn btn-danger text-white shadow-sm ms-2">
+            <i class="bi bi-file-earmark-pdf-fill"></i> Descargar PDF
+        </a>
     </div>
 </div>
 
