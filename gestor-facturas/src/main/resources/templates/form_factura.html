@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:data-bs-theme="${tema}">
+<head>
+    <meta charset="UTF-8">
+    <title>Editor de Factura</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        /* --- ESTILOS GENERALES --- */
+        body { background-color: #f3f4f6; transition: background 0.3s; }
+        .card { border: none; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+
+        .section-icon {
+            width: 32px; height: 32px;
+            display: inline-flex; align-items: center; justify-content: center;
+            background: #e0e7ff; color: #4338ca;
+            border-radius: 8px; margin-right: 10px;
+        }
+
+        /* --- PERSONALIZACIÓN DEL MODO OSCURO --- */
+        /* Bootstrap ya hace el 90% del trabajo, solo retocamos detalles */
+
+        [data-bs-theme="dark"] body {
+            background-color: #1e1e2f !important; /* Fondo principal */
+        }
+
+        [data-bs-theme="dark"] .card {
+            background-color: #27293d; /* Fondo tarjetas */
+            border: 1px solid #444;
+        }
+
+        /* Cabecera negra para resaltar (Tu preferencia) */
+        [data-bs-theme="dark"] .card-header-custom {
+            background-color: #000000;
+            color: white;
+            border-bottom: 1px solid #444;
+        }
+
+        /* Iconos en modo oscuro */
+        [data-bs-theme="dark"] .section-icon {
+            background-color: #3b3b58;
+            color: #818cf8;
+        }
+
+        /* Ajuste de inputs para que sean bien oscuros si Bootstrap los deja gris claro */
+        [data-bs-theme="dark"] .form-control,
+        [data-bs-theme="dark"] .form-select,
+        [data-bs-theme="dark"] input[type="file"] {
+            background-color: #15151c; /* Casi negro */
+            border-color: #444;
+            color: #fff;
+        }
+
+        [data-bs-theme="dark"] .form-control:focus {
+            background-color: #000000;
+            border-color: #3b82f6;
+            color: #fff;
+        }
+
+        /* Estilos para el estado "normal" (Claro) */
+        .card-header-custom {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            align-items: center;
+        }
+    </style>
+</head>
+
+<body class="py-5">
+
+<div class="container" style="max-width: 900px;">
+
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <h2 class="fw-bold">
+            <i class="bi bi-pencil-square text-primary me-2"></i>Nueva Factura
+        </h2>
+        <a th:href="@{/}" class="btn btn-outline-secondary rounded-pill px-4">Cancelar</a>
+    </div>
+
+    <form th:action="@{/guardar}" th:object="${factura}" method="post" enctype="multipart/form-data">
+        <input type="hidden" th:field="*{id}" />
+
+        <div class="row g-4">
+
+            <div class="col-md-12">
+                <div class="card h-100">
+                    <div class="card-header-custom">
+                        <span class="section-icon"><i class="bi bi-person"></i></span>
+                        <h5 class="m-0 fw-bold">Datos del Cliente</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control" id="nombre" th:field="*{clienteNombre}" placeholder="Nombre">
+                                    <label for="nombre">Nombre / Razón Social</label>
+                                    <small class="text-danger" th:if="${#fields.hasErrors('clienteNombre')}" th:errors="*{clienteNombre}"></small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control" id="nif" th:field="*{clienteNif}" placeholder="NIF">
+                                    <label for="nif">NIF / CIF</label>
+                                    <small class="text-danger" th:if="${#fields.hasErrors('clienteNif')}" th:errors="*{clienteNif}"></small>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="form-floating">
+                                    <input type="email" class="form-control" id="email" th:field="*{clienteEmail}" placeholder="Email">
+                                    <label for="email">Correo Electrónico (Para envío)</label>
+                                    <small class="text-danger" th:if="${#fields.hasErrors('clienteEmail')}" th:errors="*{clienteEmail}"></small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <div class="card h-100">
+                    <div class="card-header-custom">
+                        <span class="section-icon"><i class="bi bi-currency-euro"></i></span>
+                        <h5 class="m-0 fw-bold">Importes y Conceptos</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control" id="concepto" th:field="*{concepto}" placeholder="Concepto">
+                            <label for="concepto">Descripción del Servicio</label>
+                            <small class="text-danger" th:if="${#fields.hasErrors('concepto')}" th:errors="*{concepto}"></small>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    <input type="number" step="0.01" class="form-control" id="base" th:field="*{baseImponible}" placeholder="Base">
+                                    <label for="base">Base (€)</label>
+                                    <small class="text-danger" th:if="${#fields.hasErrors('baseImponible')}" th:errors="*{baseImponible}"></small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    <input type="number" class="form-control" id="iva" th:field="*{porcentajeIva}" placeholder="IVA">
+                                    <label for="iva">IVA (%)</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    <input type="number" class="form-control" id="irpf" th:field="*{porcentajeIrpf}" placeholder="IRPF">
+                                    <label for="irpf">IRPF (%)</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-header-custom">
+                        <span class="section-icon"><i class="bi bi-image"></i></span>
+                        <h5 class="m-0 fw-bold">Logo</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="mb-3">
+                            <label class="form-label small opacity-75">Subir imagen corporativa</label>
+                            <input type="file" name="file" class="form-control" accept="image/*" />
+                        </div>
+                        <hr>
+                        <div class="form-check form-switch py-2">
+                            <input class="form-check-input" type="checkbox" th:field="*{pagada}" id="pagadaCheck">
+                            <label class="form-check-label fw-bold" for="pagadaCheck">¿Cobrada?</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div> <div class="mt-4 text-end">
+        <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 shadow">
+            <i class="bi bi-save me-2"></i> Guardar Factura
+        </button>
+    </div>
+    </form>
+</div>
+</body>
+</html>

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel de Control</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- TEMA OSCURO --- */
+        body.dark-mode { background-color: #1e1e2f; color: #f8f9fa; }
+        body.dark-mode .card { background-color: #27293d; color: white; border: 1px solid #444; }
+        body.dark-mode .table { color: white; border-color: #444; }
+        body.dark-mode .text-dark { color: white !important; }
+        body.dark-mode .text-muted { color: #aaa !important; }
+        body.dark-mode .table-row-hover:hover { background-color: #32325d !important; }
+
+        /* FUERZA BRUTA: Esto obliga a la cabecera a ser NEGRA en modo oscuro */
+        body.dark-mode .table-light,
+        body.dark-mode .table-light th,
+        body.dark-mode .table thead th {
+            background-color: #000000 !important; /* Negro puro o #212529 para gris muy oscuro */
+            color: #ffffff !important;
+            border-color: #444 !important;
+        }
+
+        /* --- ESTILOS GENERALES --- */
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; transition: background 0.3s; }
+        .card { border: none; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .navbar { background: linear-gradient(135deg, #0f172a, #1e293b); }
+        .table-row-hover:hover { background-color: rgba(0,0,0,0.05); transition: 0.2s; }
+        .action-btn { transition: transform 0.2s; }
+        .action-btn:hover { transform: translateY(-2px); }
+    </style>
+</head>
+
+<body th:classappend="${tema == 'dark' ? 'dark-mode' : ''}">
+
+<nav class="navbar navbar-dark mb-4 py-3 shadow">
+    <div class="container">
+        <span class="navbar-brand fw-bold d-flex align-items-center gap-2">
+            <i class="bi bi-briefcase-fill text-info"></i> SaaS Facturas
+        </span>
+        <div class="d-flex align-items-center gap-3">
+            <div class="text-white small opacity-75">
+                Hola, <strong sec:authentication="name">Usuario</strong>
+            </div>
+
+            <a th:href="@{/cambiar-tema}" class="btn btn-sm btn-outline-info rounded-pill" title="Cambiar Tema">
+                <i class="bi" th:classappend="${tema == 'dark' ? 'bi-sun-fill' : 'bi-moon-fill'}"></i>
+            </a>
+
+            <form th:action="@{/logout}" method="post" class="d-inline">
+                <button type="submit" class="btn btn-sm btn-outline-light rounded-pill px-3">
+                    <i class="bi bi-box-arrow-right"></i> Salir
+                </button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-0" th:classappend="${tema == 'dark' ? 'text-white' : 'text-dark'}">Mis Facturas</h3>
+            <p class="text-muted small">Gestiona tus ingresos y clientes</p>
+        </div>
+        <a sec:authorize="hasRole('ADMIN')" th:href="@{/nueva}" class="btn btn-primary btn-lg shadow-sm px-4 rounded-pill">
+            <i class="bi bi-plus-lg me-1"></i> Nueva Factura
+        </a>
+    </div>
+
+    <div class="card mb-4 border-0 shadow-sm">
+        <div class="card-body p-2">
+            <form th:action="@{/}" method="get" class="row g-2 align-items-center">
+                <div class="col-auto ms-2 text-muted">
+                    <i class="bi bi-search"></i>
+                </div>
+                <div class="col">
+                    <input type="text" name="query" class="form-control border-0 shadow-none"
+                           placeholder="Buscar por cliente o concepto..."
+                           th:value="${query}"
+                           th:style="${tema == 'dark' ? 'background: transparent; color: white;' : ''}">
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-dark rounded-pill px-4">Buscar</button>
+                    <a th:if="${query != null && query != ''}" th:href="@{/}" class="btn btn-outline-secondary rounded-pill ms-1">
+                        <i class="bi bi-x-lg"></i>
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card p-3 border-start border-4 border-primary">
+                <div class="text-muted small text-uppercase fw-bold">Total Facturado</div>
+                <div class="fs-3 fw-bold" th:classappend="${tema == 'dark' ? 'text-white' : 'text-dark'}" th:text="${#aggregates.sum(facturas.![importeTotal]) ?: 0} + ' €'">0 €</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card p-3 border-start border-4 border-success">
+                <div class="text-muted small text-uppercase fw-bold">Facturas Visibles</div>
+                <div class="fs-3 fw-bold" th:classappend="${tema == 'dark' ? 'text-white' : 'text-dark'}"><span th:text="${facturas.size()}">0</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light text-uppercase small text-muted">
+                <tr>
+                    <th class="ps-4">ID</th>
+                    <th>Cliente / NIF</th>
+                    <th>Concepto</th>
+                    <th>Fecha</th>
+                    <th>Importe</th>
+                    <th>Estado</th>
+                    <th class="text-end pe-4">Acciones</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="f : ${facturas}" class="table-row-hover">
+                    <td class="ps-4 fw-bold opacity-75" th:text="'#' + ${f.id}">#1</td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center fw-bold"
+                                 style="width: 35px; height: 35px; font-size: 0.8rem;">
+                                <i class="bi bi-building"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold" th:text="${f.clienteNombre}">Nombre</div>
+                                <small class="text-muted" th:text="${f.clienteNif}">NIF</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="text-muted" th:text="${f.concepto}">Concepto</td>
+                    <td class="text-muted small">
+                        <i class="bi bi-calendar3 me-1"></i> <span th:text="${f.fechaEmision}">Date</span>
+                    </td>
+                    <td class="fw-bold" th:text="${f.importeTotal} + ' €'">0.00 €</td>
+                    <td>
+                        <span th:if="${f.pagada}" class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 status-badge">
+                            <i class="bi bi-check-circle-fill me-1"></i> Pagada
+                        </span>
+                        <span th:unless="${f.pagada}" class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 status-badge">
+                            <i class="bi bi-clock-fill me-1"></i> Pendiente
+                        </span>
+                    </td>
+                    <td class="text-end pe-4">
+                        <div class="btn-group">
+                            <a th:href="@{/ver/{id}(id=${f.id})}" class="btn btn-sm btn-light border action-btn" title="Ver Detalle">
+                                <i class="bi bi-eye text-primary"></i>
+                            </a>
+
+                            <div sec:authorize="hasRole('ADMIN')" class="btn-group">
+                                <a th:href="@{/editar/{id}(id=${f.id})}" class="btn btn-sm btn-light border action-btn" title="Editar">
+                                    <i class="bi bi-pencil text-secondary"></i>
+                                </a>
+                                <a th:href="@{/enviar/{id}(id=${f.id})}" class="btn btn-sm btn-light border action-btn" title="Enviar Email">
+                                    <i class="bi bi-envelope-paper text-warning"></i>
+                                </a>
+                                <a th:href="@{/borrar/{id}(id=${f.id})}" class="btn btn-sm btn-light border action-btn text-danger"
+                                   onclick="return confirm('¿Seguro que quieres borrar esta factura?')" title="Borrar">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+            <div th:if="${#lists.isEmpty(facturas)}" class="text-center py-5">
+                <div class="mb-3 text-muted opacity-50">
+                    <i class="bi bi-inbox fs-1"></i>
+                </div>
+                <h5 class="fw-bold text-muted">No se encontraron facturas</h5>
+                <p class="text-muted small">No hay resultados para tu búsqueda o no tienes facturas asignadas.</p>
+                <a sec:authorize="hasRole('ADMIN')" th:href="@{/nueva}" class="btn btn-sm btn-outline-primary mt-2">Crear la primera</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
