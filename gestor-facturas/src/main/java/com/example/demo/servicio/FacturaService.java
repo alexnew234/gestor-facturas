@@ -93,16 +93,24 @@ public class FacturaService {
                 .toList();
     }
 
-    public Double calcularTotalFacturado() {
-        return repositorio.stream().filter(f -> f.getImporteTotal() != null).mapToDouble(Factura::getImporteTotal).sum();
+    public Double calcularTotalFacturado(List<Factura> facturas) {
+        double total = 0.0;
+        for (Factura f : facturas) {
+            if (f.getImporteTotal() != null) {
+                total += f.getImporteTotal();
+            }
+        }
+        return Math.round(total * 100.0) / 100.0; // Redondeo bonito
     }
 
-    public long contarFacturasPendientes() {
-        return repositorio.stream().filter(f -> !f.isPagada()).count();
+    public long contarFacturasPendientes(List<Factura> facturas) {
+        // Usamos la lista que nos pasan, no 'repositorio'
+        return facturas.stream().filter(f -> !f.isPagada()).count();
     }
 
-    public long contarTotalFacturas() {
-        return repositorio.size();
+    public long contarTotalFacturas(List<Factura> facturas) {
+        // Contamos el tamaño de la lista que nos pasan
+        return facturas.size();
     }
 
     public void generarPdf(Factura factura, HttpServletResponse response) {

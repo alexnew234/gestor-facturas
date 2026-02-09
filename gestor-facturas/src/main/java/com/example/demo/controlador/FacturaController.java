@@ -67,9 +67,9 @@ public class FacturaController {
 
         // --- NUEVAS LÍNEAS PARA LOS KPIs (TARJETAS) ---
         // Esto envía los números calculados a la vista lista.html
-        model.addAttribute("kpiTotal", service.calcularTotalFacturado());
-        model.addAttribute("kpiPendientes", service.contarFacturasPendientes());
-        model.addAttribute("kpiNumFacturas", service.contarTotalFacturas());
+        model.addAttribute("kpiTotal", service.calcularTotalFacturado(facturas));
+        model.addAttribute("kpiPendientes", service.contarFacturasPendientes(facturas));
+        model.addAttribute("kpiNumFacturas", service.contarTotalFacturas(facturas));
         // ----------------------------------------------
 
         model.addAttribute("facturas", facturas);
