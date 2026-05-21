@@ -33,7 +33,7 @@ public class FacturaController {
         Files.createDirectories(UPLOAD_DIR);
     }
 
-    // --- TEMA 12: COOKIES (MODO OSCURO) ---
+    // ---COOKIES (MODO OSCURO) ---
     @ModelAttribute("tema")
     public String getTema(@CookieValue(name = "tema", defaultValue = "light") String tema) {
         return tema;
@@ -51,7 +51,6 @@ public class FacturaController {
         return "redirect:" + referer;
     }
 
-    // --- AQUÍ ESTÁ EL CAMBIO CLAVE PARA LOS GRÁFICOS/TARJETAS ---
     @GetMapping("/dashboard")
     public String dashboard(Model model, Authentication auth, @RequestParam(required = false) String query) {
         String username = auth.getName();
@@ -65,7 +64,7 @@ public class FacturaController {
                     .collect(Collectors.toList());
         }
 
-        // --- NUEVAS LÍNEAS PARA LOS KPIs (TARJETAS) ---
+        // ---LÍNEAS PARA LOS KPIs---
         // Esto envía los números calculados a la vista lista.html
         model.addAttribute("kpiTotal", service.calcularTotalFacturado(facturas));
         model.addAttribute("kpiPendientes", service.contarFacturasPendientes(facturas));
@@ -99,7 +98,7 @@ public class FacturaController {
             if (antigua != null) factura.setNombreLogo(antigua.getNombreLogo());
         }
         service.guardar(factura);
-        return "redirect:/dashboard"; // Te recomiendo redirigir al dashboard en lugar de a "/"
+        return "redirect:/dashboard";
     }
 
     @GetMapping("/editar/{id}")
@@ -121,7 +120,7 @@ public class FacturaController {
     }
 
     @GetMapping("/borrar/{id}")
-    public String borrar(@PathVariable Long id) { service.borrar(id); return "redirect:/dashboard"; } // Redirigir a dashboard
+    public String borrar(@PathVariable Long id) { service.borrar(id); return "redirect:/dashboard"; }
 
     @GetMapping("/enviar/{id}")
     public String enviar(@PathVariable Long id) {

@@ -24,7 +24,7 @@ import com.lowagie.text.Image;
 import com.lowagie.text.pdf.PdfWriter;
 import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfPCell;
-// ------------------------------------
+
 
 @Service
 public class FacturaService {
@@ -34,9 +34,6 @@ public class FacturaService {
 
     @Autowired
     private JavaMailSender mailSender;
-
-    // ... (Tus métodos findAll, findById, guardar, borrar, enviarEmail, buscar, calcularTotal, contarPendientes, contarTotal SIGUEN IGUAL) ...
-    // NO LOS BORRES, déjalos como los tenías.
 
     public List<Factura> findAll() { return repositorio; }
 
@@ -82,7 +79,7 @@ public class FacturaService {
             mailSender.send(message);
             System.out.println("Email enviado correctamente a " + f.getClienteEmail());
         } catch (Exception e) {
-            e.printStackTrace(); // O System.err.println...
+            e.printStackTrace();
         }
     }
 
@@ -235,7 +232,7 @@ public class FacturaService {
             cellImporte.setBorderColor(colorSecundario);
             table.addCell(cellImporte);
 
-            // (Opcional) Filas vacías para dar sensación de "hoja"
+            // Filas vacías para dar sensación de "hoja"
             for(int i=0; i<3; i++){
                 PdfPCell empty = new PdfPCell(new Phrase(" "));
                 empty.setPadding(10);
@@ -246,7 +243,7 @@ public class FacturaService {
 
             document.add(table);
 
-            // --- SECCIÓN 4: TOTALES (El toque profesional final) ---
+            // --- SECCIÓN 4: TOTALES---
             // Usamos una tabla alineada a la derecha para los totales
             PdfPTable totalsTable = new PdfPTable(2);
             totalsTable.setWidthPercentage(40); // Solo ocupa el 40% del ancho

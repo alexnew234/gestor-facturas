@@ -23,7 +23,7 @@ public class UsuarioService implements UserDetailsService { // [cite: 565]
         if ("admin".equals(username)) {
             return User.builder()
                     .username("admin")
-                    .password("{noop}1234") // {noop} indica que no hay encriptación (para pruebas) [cite: 567]
+                    .password("{noop}1234")
                     .roles("ADMIN")
                     .build();
         }

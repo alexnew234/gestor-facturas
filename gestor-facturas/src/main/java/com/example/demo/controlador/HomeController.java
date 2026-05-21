@@ -11,6 +11,6 @@ public class HomeController {
     @GetMapping("/")
     public String home(Model model, @CookieValue(name = "tema", defaultValue = "light") String tema) {
         model.addAttribute("tema", tema);
-        return "home"; // Muestra la plantilla home.html
+        return "home";
     }
 }

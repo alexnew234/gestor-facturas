@@ -14,19 +14,18 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests((requests) -> requests
-                        // 1. AÑADIDO: "/" (Home) y "/cambiar-tema" son públicos
                         .requestMatchers("/", "/css/**", "/js/**", "/uploads/**", "/webjars/**", "/login", "/cambiar-tema").permitAll()
 
-                        // 2. TEMA 13: La API solo para administradores
+                        //La API solo para administradores
                         .requestMatchers("/api/**").hasRole("ADMIN")
                         .requestMatchers("/nueva", "/guardar", "/editar/**", "/borrar/**", "/enviar/**").hasRole("ADMIN")
 
-                        // 3. El resto requiere estar logueado
+                        //El resto requiere estar logueado
                         .anyRequest().authenticated()
                 )
                 .formLogin((form) -> form
                         .loginPage("/login")
-                        // 4. CAMBIO IMPORTANTE: Al entrar, vamos al Dashboard, no a la Home
+                        //Al entrar, vamos al Dashboard
                         .defaultSuccessUrl("/dashboard", true)
                         .permitAll()
                 )
@@ -38,6 +37,4 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // IMPORTANTE: NO pongas aquí ningún @Bean de UserDetailsService ni PasswordEncoder.
-    // Así Spring usará automáticamente tu UsuarioService con {noop}.
 }
